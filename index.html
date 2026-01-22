@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eksperimen Pintar Gaya Gesek</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f8;
+    padding: 15px;
+}
+h1, h2 {
+    text-align: center;
+}
+.card {
+    background: white;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 10px;
+}
+button {
+    padding: 10px;
+    margin-top: 10px;
+    width: 100%;
+    font-size: 16px;
+}
+textarea {
+    width: 100%;
+    height: 80px;
+}
+.result {
+    background: #e8f5e9;
+    padding: 10px;
+    border-radius: 8px;
+}
+</style>
+</head>
+<body>
+
+<h1>🔬 Eksperimen Pintar Gaya Gesek</h1>
+
+<div class="card">
+<h2>1️⃣ Foto Benda Pertama</h2>
+<input type="file" accept="image/*" capture="environment" id="img1">
+<p id="hasil1"></p>
+</div>
+
+<div class="card">
+<h2>2️⃣ Foto Benda Kedua</h2>
+<input type="file" accept="image/*" capture="environment" id="img2">
+<p id="hasil2"></p>
+</div>
+
+<div class="card">
+<h2>3️⃣ Analisis Gaya Gesek</h2>
+<button onclick="analisisGesek()">Analisis Gesekan</button>
+<div id="hasilGesek" class="result"></div>
+</div>
+
+<div class="card">
+<h2>4️⃣ Ide Pemanfaatan Gesekan</h2>
+<p><b>Pertanyaan:</b> Coba tuliskan ide atau pendapat kamu mengenai pemanfaatan lain dari gesekan kedua benda tersebut!</p>
+<textarea id="jawabanSiswa"></textarea>
+<button onclick="analisisJawaban()">Kirim Jawaban</button>
+<div id="feedback" class="result"></div>
+</div>
+
+<script>
+let benda1 = {};
+let benda2 = {};
+
+const bahan = [
+  {nama:"Karet", kasar:0.9},
+  {nama:"Kayu", kasar:0.6},
+  {nama:"Besi", kasar:0.4},
+  {nama:"Plastik", kasar:0.3},
+  {nama:"Kaca", kasar:0.2}
+];
+
+function prediksiBenda() {
+    return bahan[Math.floor(Math.random()*bahan.length)];
+}
+
+document.getElementById("img1").addEventListener("change", () => {
+    benda1 = prediksiBenda();
+    document.getElementById("hasil1").innerHTML =
+      `Prediksi bahan: <b>${benda1.nama}</b><br>
+       Tingkat kekasaran: <b>${benda1.kasar}</b>`;
+});
+
+document.getElementById("img2").addEventListener("change", () => {
+    benda2 = prediksiBenda();
+    document.getElementById("hasil2").innerHTML =
+      `Prediksi bahan: <b>${benda2.nama}</b><br>
+       Tingkat kekasaran: <b>${benda2.kasar}</b>`;
+});
+
+function analisisGesek() {
+    if (!benda1.nama || !benda2.nama) {
+        alert("Foto kedua benda terlebih dahulu!");
+        return;
+    }
+
+    let koef = (benda1.kasar + benda2.kasar) / 2;
+    let tingkat = koef > 0.6 ? "TINGGI" : koef > 0.4 ? "SEDANG" : "RENDAH";
+
+    document.getElementById("hasilGesek").innerHTML =
+      `<b>Gesekan:</b> ${tingkat}<br>
+       <b>Contoh pemanfaatan:</b> Gesekan antara ${benda1.nama} dan ${benda2.nama}
+       digunakan dalam rem, pengait, atau alas anti-slip.`;
+}
+
+function analisisJawaban() {
+    let teks = document.getElementById("jawabanSiswa").value.toLowerCase();
+    let valid = teks.includes("gesek") || teks.includes("rem") || teks.includes("menahan") || teks.length > 20;
+
+    document.getElementById("feedback").innerHTML = valid
+      ? "✅ Ide kamu logis dan berkaitan dengan konsep gaya gesek."
+      : "⚠️ Ide kamu masih kurang jelas. Coba hubungkan dengan fungsi gesekan.";
+}
+</script>
+
+</body>
+</html>
