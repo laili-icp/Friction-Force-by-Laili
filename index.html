@@ -5,15 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PhysicLens AI - Gaya Gesek</title>
     <style>
-        body { font-family: sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
+        body { font-family: sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; margin: 0; }
         .container { width: 100%; max-width: 450px; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .camera-box { width: 100%; aspect-ratio: 4/3; background: #000; border-radius: 12px; overflow: hidden; margin-bottom: 10px; }
+        .camera-box { width: 100%; aspect-ratio: 4/3; background: #000; border-radius: 12px; overflow: hidden; margin-bottom: 15px; border: 2px solid #1a73e8; }
         video { width: 100%; height: 100%; object-fit: cover; }
-        button { width: 100%; padding: 15px; margin: 5px 0; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; }
+        button { width: 100%; padding: 15px; margin: 5px 0; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 1rem; }
         .btn-blue { background: #1a73e8; color: white; }
         .btn-green { background: #34a853; color: white; }
         .card { background: #f8f9fa; padding: 15px; border-radius: 10px; margin-top: 15px; border-left: 5px solid #1a73e8; display: none; }
-        #loading { display: none; text-align: center; font-weight: bold; color: orange; padding: 10px; }
+        #loading { display: none; text-align: center; font-weight: bold; color: #e67c00; padding: 10px; }
     </style>
 </head>
 <body>
@@ -37,36 +37,63 @@
     </div>
 
     <div id="feedback-area" class="card" style="border-left-color: #34a853;">
-        <strong>Tantangan:</strong> Menurutmu, apa manfaat lain dari gesekan kedua benda ini?
-        <textarea id="student-idea" style="width:100%; margin-top:10px; padding:10px; border-radius:5px; border:1px solid #ddd;"></textarea>
-        <button class="btn-blue" onclick="validateStudentIdea()" style="margin-top:10px;">Kirim & Validasi Ide</button>
-        <div id="validation-result" style="margin-top:10px; font-style: italic;"></div>
+        <strong>Tantangan Siswa:</strong> Apa manfaat lain dari gesekan kedua benda ini?
+        <textarea id="student-idea" style="width:100%; margin-top:10px; padding:10px; border-radius:5px; border:1px solid #ddd; box-sizing: border-box;"></textarea>
+        <button class="btn-blue" onclick="validateStudentIdea()" style="margin-top:10px;">Validasi Ide</button>
+        <div id="validation-result" style="margin-top:10px; font-style: italic; font-size: 0.9rem;"></div>
     </div>
 </div>
 
 <canvas id="canvas" style="display:none;"></canvas>
 
 <script>
-    // MASUKKAN API KEY DI SINI
+    // 1. MASUKKAN API KEY ANDA DI SINI
     const API_KEY = "AIzaSyBROwLiFzQfo97c9er3qONY7_hYmzST_h0"; 
 
     const video = document.getElementById('webcam');
     const canvas = document.getElementById('canvas');
     let dataBenda = { benda1: null, benda2: null };
 
-    // FUNGSI 1: AKTIFKAN KAMERA
+    // FUNGSI UNTUK AKTIFKAN KAMERA
     async function startCamera() {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: "environment" } 
+            });
             video.srcObject = stream;
         } catch (err) {
-            alert("Gagal akses kamera. Pastikan link diawali https://");
+            alert("Izin kamera ditolak atau tidak didukung. Pastikan gunakan HTTPS.");
+            console.error(err);
         }
     }
 
-    // FUNGSI 2: ANALISIS BENDA
+    // FUNGSI UNTUK MENGIRIM KE AI
+    async function callGemini(prompt, base64Img = null) {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`;
+        
+        const payload = {
+            contents: [{
+                parts: [
+                    { text: prompt },
+                    ...(base64Img ? [{ inline_data: { mime_type: "image/jpeg", data: base64Img } }] : [])
+                ]
+            }]
+        };
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) throw new Error("Gagal menghubungi AI");
+        const data = await response.json();
+        return data.candidates[0].content.parts[0].text;
+    }
+
+    // FUNGSI UNTUK ANALISIS FOTO BENDA
     async function analyzeObject(num) {
-        if (!video.srcObject) return alert("Aktifkan kamera dulu!");
+        if (!video.srcObject) return alert("Klik 'Aktifkan Kamera' terlebih dahulu!");
         
         const context = canvas.getContext('2d');
         canvas.width = video.videoWidth; 
@@ -76,66 +103,37 @@
 
         document.getElementById('loading').style.display = "block";
 
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`;
-        
         try {
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: "Sebutkan nama bahan benda ini dan skor kekasaran 1-10." }, { inline_data: { mime_type: "image/jpeg", data: base64Img } }] }]
-                })
-            });
-
-            const data = await response.json();
-            const resultText = data.candidates[0].content.parts[0].text;
+            const result = await callGemini("Sebutkan material benda ini dan skor kekasaran permukaannya (1-10). Jawab singkat.", base64Img);
+            dataBenda[`benda${num}`] = result;
             
-            dataBenda[`benda${num}`] = resultText;
             document.getElementById('result-area').style.display = "block";
-            document.getElementById('object-info').innerHTML += `<p><b>Benda ${num}:</b> ${resultText}</p>`;
+            document.getElementById('object-info').innerHTML += `<p><b>Benda ${num}:</b> ${result}</p>`;
             
-            if(dataBenda.benda1 && dataBenda.benda2) performFullAnalysis();
+            if(dataBenda.benda1 && dataBenda.benda2) {
+                const analysis = await callGemini(`Jika ${dataBenda.benda1} bergesekan dengan ${dataBenda.benda2}, jelaskan interaksi gaya geseknya dan beri 1 contoh manfaatnya.`);
+                document.getElementById('friction-analysis').innerHTML = "<b>Analisis Fisika:</b><br>" + analysis;
+                document.getElementById('feedback-area').style.display = "block";
+            }
         } catch (e) {
-            alert("Error: Pastikan API Key benar.");
+            alert("Terjadi kesalahan. Cek API Key Anda.");
         } finally {
             document.getElementById('loading').style.display = "none";
         }
     }
 
-    // FUNGSI 3: ANALISIS GABUNGAN
-    async function performFullAnalysis() {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`;
-        const prompt = `Jika ${dataBenda.benda1} bergesekan dengan ${dataBenda.benda2}, jelaskan gaya geseknya dan 1 manfaatnya.`;
-
-        try {
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-            });
-            const data = await response.json();
-            document.getElementById('friction-analysis').innerHTML = "<b>Analisis Fisika:</b><br>" + data.candidates[0].content.parts[0].text;
-            document.getElementById('feedback-area').style.display = "block";
-        } catch (e) { console.error(e); }
-    }
-
-    // FUNGSI 4: VALIDASI IDE SISWA
+    // FUNGSI UNTUK VALIDASI IDE SISWA
     async function validateStudentIdea() {
         const idea = document.getElementById('student-idea').value;
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`;
-        const prompt = `Siswa berpendapat tentang gesekan ${dataBenda.benda1} dan ${dataBenda.benda2}: "${idea}". Apakah logis?`;
-
+        if (!idea) return alert("Isi ide kamu dulu!");
+        
         document.getElementById('validation-result').innerText = "Memvalidasi...";
-
         try {
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-            });
-            const data = await response.json();
-            document.getElementById('validation-result').innerText = data.candidates[0].content.parts[0].text;
-        } catch (e) { alert("Gagal validasi."); }
+            const result = await callGemini(`Benda 1: ${dataBenda.benda1}. Benda 2: ${dataBenda.benda2}. Siswa berpendapat: "${idea}". Apakah logis secara fisika?`);
+            document.getElementById('validation-result').innerText = result;
+        } catch (e) {
+            alert("Gagal validasi.");
+        }
     }
 </script>
 
