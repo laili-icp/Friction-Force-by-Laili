@@ -3,29 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PhysicLens AI - Lab Gaya Gesek</title>
+    <title>PhysicLens AI - Gaya Gesek</title>
     <style>
-        :root { --primary: #1a73e8; --success: #34a853; --bg: #f8f9fa; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 15px; color: #333; }
-        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: var(--primary); margin-bottom: 5px; }
-        .camera-box { width: 100%; background: #000; border-radius: 15px; overflow: hidden; border: 3px solid var(--primary); margin: 15px 0; }
-        video { width: 100%; display: block; }
-        button { width: 100%; padding: 14px; margin: 8px 0; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.2s; }
-        .btn-blue { background: var(--primary); color: white; }
-        .btn-green { background: var(--success); color: white; }
-        .card { background: #fff; padding: 15px; border-radius: 12px; margin-top: 15px; border: 1px solid #ddd; border-left: 6px solid var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        #loading { display: none; color: #f29900; text-align: center; font-weight: bold; padding: 10px; animation: blink 1s infinite; }
-        @keyframes blink { 50% { opacity: 0.5; } }
-        textarea { width: 100%; border-radius: 10px; padding: 12px; border: 2px solid #ddd; box-sizing: border-box; margin-top: 10px; }
-        .info-benda { font-size: 0.9rem; color: #555; background: #eef2f7; padding: 8px; border-radius: 8px; margin-bottom: 5px; }
+        :root { --blue: #1a73e8; --green: #34a853; --gray: #5f6368; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f1f3f4; margin: 0; padding: 15px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 480px; background: white; padding: 25px; border-radius: 24px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+        h2 { text-align: center; color: var(--blue); margin-bottom: 20px; font-weight: 600; }
+        .camera-box { width: 100%; aspect-ratio: 4/3; background: #000; border-radius: 16px; overflow: hidden; border: 3px solid var(--blue); margin-bottom: 15px; }
+        video { width: 100%; height: 100%; object-fit: cover; }
+        button { width: 100%; padding: 14px; margin: 8px 0; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.3s; }
+        .btn-blue { background: var(--blue); color: white; }
+        .btn-green { background: var(--green); color: white; }
+        .card { background: #f8f9fa; padding: 18px; border-radius: 14px; margin-top: 20px; border-left: 6px solid var(--blue); }
+        #loading { display: none; color: #e67c00; text-align: center; font-weight: bold; padding: 10px; }
+        textarea { width: 100%; border-radius: 10px; padding: 12px; border: 2px solid #ddd; box-sizing: border-box; margin-top: 10px; font-family: inherit; }
+        .info-tag { font-size: 0.85rem; background: #e8f0fe; color: var(--blue); padding: 5px 12px; border-radius: 20px; display: inline-block; margin: 4px 0; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h2>🔬 PhysicLens AI</h2>
-    <p style="text-align:center; font-size: 0.8rem; color: #666;">Laboratorium Virtual Gaya Gesek</p>
     
     <div class="camera-box">
         <video id="webcam" autoplay playsinline></video>
@@ -37,26 +35,26 @@
         <button class="btn-green" onclick="analyzeObject(2)">Foto Benda 2</button>
     </div>
 
-    <div id="loading">✨ AI sedang menganalisis permukaan...</div>
+    <div id="loading">✨ AI Sedang Menganalisis...</div>
 
     <div id="result-area" class="card" style="display:none;">
         <div id="object-info"></div>
-        <hr style="border:0; border-top:1px dashed #ccc; margin: 15px 0;">
+        <hr style="border: 0; border-top: 1px solid #ddd; margin: 15px 0;">
         <div id="friction-analysis"></div>
     </div>
 
-    <div id="feedback-area" class="card" style="display:none; border-left-color: var(--success);">
-        <p><strong>Tantangan:</strong> Berikan ide pemanfaatan lain dari gesekan kedua benda ini!</p>
-        <textarea id="student-idea" rows="3" placeholder="Contoh: Digunakan untuk alas sepatu agar tidak licin..."></textarea>
-        <button class="btn-blue" onclick="validateStudentIdea()" style="margin-top:15px;">Validasi Ide Saya</button>
-        <div id="validation-result" style="margin-top:15px; padding: 10px; background: #f0fdf4; border-radius: 8px; display: none; font-size: 0.9rem;"></div>
+    <div id="feedback-area" class="card" style="display:none; border-left-color: var(--green);">
+        <p><strong>Poin 5 & 6:</strong> Apa pemanfaatan lain dari kombinasi gesekan kedua benda ini menurutmu?</p>
+        <textarea id="student-idea" rows="3" placeholder="Contoh: Digunakan untuk rem sepeda..."></textarea>
+        <button class="btn-blue" onclick="validateStudentIdea()" style="margin-top:15px;">Kirim & Cek Validasi Ide</button>
+        <div id="validation-result" style="margin-top:15px; font-style: italic; color: #444;"></div>
     </div>
     
     <canvas id="canvas" style="display:none;"></canvas>
 </div>
 
 <script>
-    // MASUKKAN API KEY ANDA
+    // MASUKKAN API KEY ANDA DI SINI
     const API_KEY = "AIzaSyBROwLiFzQfo97c9er3qONY7_hYmzST_h0"; 
     
     const video = document.getElementById('webcam');
@@ -68,4 +66,91 @@
             const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
             video.srcObject = stream;
         } catch (err) {
-            alert("Gagal akses kamera. Pastikan HTTPS aktif
+            alert("Kamera gagal diakses. Pastikan menggunakan HTTPS.");
+        }
+    }
+
+    async function sendToAI(prompt, base64Img = null) {
+        // Menggunakan v1beta dan gemini-1.5-flash-latest (Paling stabil untuk Tier 1)
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`;
+        
+        const parts = [{ text: prompt }];
+        if (base64Img) {
+            parts.push({ inline_data: { mime_type: "image/jpeg", data: base64Img } });
+        }
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: parts }] })
+        });
+
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.error.message || "Gagal menghubungi AI");
+        }
+
+        const data = await response.json();
+        return data.candidates[0].content.parts[0].text;
+    }
+
+    async function analyzeObject(num) {
+        if (!video.srcObject) return alert("Aktifkan kamera terlebih dahulu!");
+        
+        const context = canvas.getContext('2d');
+        canvas.width = video.videoWidth; 
+        canvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const base64Img = canvas.toDataURL('image/jpeg').split(',')[1];
+
+        document.getElementById('loading').style.display = "block";
+
+        try {
+            // Poin 1 & 2: Identifikasi & Kekasaran
+            const prompt = "Identifikasi bahan benda ini dan beri skor kekasaran permukaannya (Skala 1-10). Jawab singkat (Contoh: Bahan Kayu, Skor 6).";
+            const result = await sendToAI(prompt, base64Img);
+            
+            dataBenda[`benda${num}`] = result;
+            document.getElementById('object-info').innerHTML += `<div class="info-tag">Benda ${num}: ${result}</div><br>`;
+            
+            if(dataBenda.benda1 && dataBenda.benda2) performFullAnalysis();
+        } catch (e) {
+            alert("Error: " + e.message);
+        } finally {
+            document.getElementById('loading').style.display = "none";
+        }
+    }
+
+    async function performFullAnalysis() {
+        document.getElementById('result-area').style.display = "block";
+        document.getElementById('loading').style.display = "block";
+
+        // Poin 3 & 4: Analisis Interaksi & Pemanfaatan
+        const prompt = `Analisis Fisika: Jika ${dataBenda.benda1} bersentuhan dengan ${dataBenda.benda2} dan digeser, (1) Jelaskan interaksi gesekannya secara singkat, (2) Sebutkan 1 contoh pemanfaatan nyata dari kombinasi gesekan ini.`;
+
+        try {
+            const result = await sendToAI(prompt);
+            document.getElementById('friction-analysis').innerHTML = "<strong>Analisis Interaksi:</strong><br>" + result.replace(/\n/g, "<br>");
+            document.getElementById('feedback-area').style.display = "block";
+        } catch (e) { console.error(e); }
+        document.getElementById('loading').style.display = "none";
+    }
+
+    async function validateStudentIdea() {
+        const idea = document.getElementById('student-idea').value;
+        if (!idea) return alert("Tuliskan ide kamu terlebih dahulu!");
+
+        const valDiv = document.getElementById('validation-result');
+        valDiv.innerHTML = "Memvalidasi ide...";
+
+        // Poin 7: Validasi Logika Siswa
+        const prompt = `Siswa berpendapat bahwa gesekan antara ${dataBenda.benda1} dan ${dataBenda.benda2} dapat dimanfaatkan untuk: "${idea}". Jelaskan secara singkat apakah ide ini valid secara fisika?`;
+
+        try {
+            const result = await sendToAI(prompt);
+            valDiv.innerHTML = "<strong>Validasi AI:</strong><br>" + result;
+        } catch (e) { valDiv.innerText = "Gagal memvalidasi."; }
+    }
+</script>
+</body>
+</html>
